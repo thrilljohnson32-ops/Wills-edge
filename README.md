@@ -1,2 +1,289 @@
 # Wills-edge
-Daily betting lines for action every day of the year
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Will's Edge — Betting Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#f0c14b;--bg:#0a0e17;--panel:#0d1220;--border:#1e2a40;--green:#52c97a;--blue:#4a9acf;--text:#dde;--muted:#8899aa;--dim:#445566;--darker:#334455}
+body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#2a3245;border-radius:3px}
+#header{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+#logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--gold)}
+#subtitle{font-size:10px;color:var(--darker);letter-spacing:3px;text-transform:uppercase;padding-top:2px}
+#game-counts{margin-left:auto;font-size:11px;color:var(--darker);font-family:'Source Code Pro',monospace;display:flex;gap:12px}
+#tabs{background:var(--panel);border-bottom:1px solid var(--border);padding:0 24px;display:flex;overflow-x:auto;position:sticky;top:53px;z-index:99}
+#tabs::-webkit-scrollbar{height:0}
+.tab{padding:11px 16px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--dim);font-size:12px;font-family:'Source Code Pro',monospace;cursor:pointer;white-space:nowrap;letter-spacing:1px;transition:all .15s}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
+.tab:hover{color:var(--muted)}
+.panel{display:none}.panel.active{display:block}
+.two-col{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 101px)}
+.sidebar{background:var(--panel);border-right:1px solid var(--border);padding:12px;overflow-y:auto;height:calc(100vh - 101px);position:sticky;top:101px}
+.main{padding:22px 26px;overflow-y:auto}
+.center-panel{max-width:680px;margin:0 auto;padding:20px}
+.game-card{background:#111827;border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.game-card:hover{background:#1c2333;border-color:var(--gold)}
+.game-card.sel-mlb{background:#1c2333;border-color:var(--gold)}
+.game-card.sel-nhl{background:#1c2333;border-color:var(--blue)}
+.game-time{font-size:10px;color:var(--darker);font-family:'Source Code Pro',monospace;margin-bottom:3px}
+.game-teams{font-size:12px;font-weight:600;color:#bbc}
+.game-away{font-size:10px;color:var(--dim);margin-top:1px}
+.game-prob{font-size:9px;color:var(--darker);font-family:'Source Code Pro',monospace;margin-top:3px}
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-family:'Source Code Pro',monospace;margin-top:5px}
+.badge-mlb{background:#0e1f10;border:1px solid #1a4a1a;color:#4a9a4a}
+.badge-pass{background:#1a1a10;border:1px solid #3a3a10;color:#888830}
+.badge-nhl{background:#0e1a2a;border:1px solid #1e3a5a;color:#4a8acf}
+.pick-card{background:#111827;border:1px solid var(--border);border-radius:9px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .15s}
+.pick-card:hover{background:#1c2333;border-color:var(--gold)}
+.sport-tag{font-size:9px;padding:1px 6px;border-radius:3px;font-family:'Source Code Pro',monospace;font-weight:700;margin-right:6px}
+.tag-mlb{background:#0e1f10;border:1px solid #1a4a1a;color:var(--green)}
+.tag-nhl{background:#0e1a2a;border:1px solid #1e3a5a;color:var(--blue)}
+.pick-name{font-size:15px;font-weight:700;color:var(--gold);font-family:'Source Code Pro',monospace}
+.pick-game-info{font-size:11px;color:var(--dim);font-family:'Source Code Pro',monospace;margin-bottom:3px}
+.odds-pos{color:var(--green)}.odds-neg{color:#aabbcc}
+.pick-reason{font-size:12px;color:var(--muted);line-height:1.6}
+.pick-tap{font-size:10px;color:var(--darker);margin-top:8px;font-family:'Source Code Pro',monospace}
+.section-label{font-size:10px;color:#3a6a3a;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;font-family:'Source Code Pro',monospace}
+.section-desc{font-size:12px;color:var(--dim);margin-bottom:16px;line-height:1.6}
+.sidebar-label{font-size:10px;color:var(--darker);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;font-family:'Source Code Pro',monospace}
+.a-label{font-size:10px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;font-family:'Source Code Pro',monospace}
+.a-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#f0f4f8;line-height:1.25;margin-bottom:4px}
+.a-vs{color:#2a3a50;font-size:13px;margin:0 6px}
+.a-prob{font-size:11px;color:var(--dim);font-family:'Source Code Pro',monospace;margin-bottom:16px}
+.odds-grid{display:grid;gap:8px;margin-bottom:16px}
+.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+.odds-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 11px}
+.odds-label{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;font-family:'Source Code Pro',monospace}
+.odds-val{font-size:11px;color:var(--muted);line-height:1.7;font-family:'Source Code Pro',monospace}
+.pick-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pick-row-label{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;font-family:'Source Code Pro',monospace}
+.pill-good{padding:4px 14px;border-radius:4px;font-weight:700;font-size:13px;font-family:'Source Code Pro',monospace;background:#0e2a0e;color:var(--gold);border:1px solid #2a5a2a}
+.pill-pass{padding:4px 14px;border-radius:4px;font-weight:700;font-size:13px;font-family:'Source Code Pro',monospace;background:#1a1a10;color:#aaaa40;border:1px solid #3a3a10}
+.pill-nhl{padding:4px 14px;border-radius:4px;font-weight:700;font-size:13px;font-family:'Source Code Pro',monospace;background:#0e1a2a;color:var(--blue);border:1px solid #1e3a5a}
+.a-box{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:16px 20px}
+.a-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle}
+.dot-g{background:var(--green)}.dot-b{background:var(--blue)}
+.a-title-bar{display:flex;align-items:center;margin-bottom:12px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);font-family:'Source Code Pro',monospace}
+.a-text{font-size:13px;line-height:1.8;color:#ccd}
+.a-text p{margin:4px 0}
+.a-text strong{color:var(--gold)}
+.empty{height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2a3a50;text-align:center;gap:10px}
+.e-icon{font-size:48px}.e-title{font-family:'Playfair Display',serif;font-size:18px}
+.e-sub{font-size:12px;max-width:260px;line-height:1.7}
+.disc{margin-top:10px;font-size:10px;color:#2a3a50;text-align:center}
+@media(max-width:600px){
+  .two-col{grid-template-columns:1fr}
+  .sidebar{height:auto;position:relative;top:0;max-height:280px}
+  .g3{grid-template-columns:1fr 1fr}
+  #subtitle{display:none}
+}
+</style>
+</head>
+<body>
+<div id="header">
+  <div id="logo">Will's Edge</div>
+  <div id="subtitle">MLB + NHL · Tue Apr 14, 2026</div>
+  <div id="game-counts"><span>⚾ 15</span><span>🏒 9</span></div>
+</div>
+<div id="tabs">
+  <button class="tab active" onclick="showTab('best')">Best Bets</button>
+  <button class="tab" onclick="showTab('f5')">First 5</button>
+  <button class="tab" onclick="showTab('finr')">1st Inn No Run</button>
+  <button class="tab" onclick="showTab('mlb')">⚾ MLB</button>
+  <button class="tab" onclick="showTab('nhl')">🏒 NHL</button>
+</div>
+<div id="panel-best" class="panel active"><div class="center-panel"><div class="section-label">🎯 Today's Best Bets — MLB + NHL</div><div id="bb-list"></div></div></div>
+<div id="panel-f5" class="panel"><div class="center-panel"><div class="section-label">⚾ First 5 Innings — MLB</div><div class="section-desc">Settle after 5 complete innings. Back elite starters without bullpen risk.</div><div id="f5-list"></div></div></div>
+<div id="panel-finr" class="panel"><div class="center-panel"><div class="section-label">🔒 First Inning No Run — MLB Top 5</div><div class="section-desc">Bet neither team scores in the 1st inning. Best with elite starters and pitcher-friendly parks.</div><div id="finr-list"></div></div></div>
+<div id="panel-mlb" class="panel"><div class="two-col"><div class="sidebar" id="mlb-sb"></div><div class="main" id="mlb-main"><div class="empty"><div class="e-icon">⚾</div><div class="e-title">Select a game for your pick</div><div class="e-sub">15 games with sharp analysis. Click any game on the left.</div></div></div></div></div>
+<div id="panel-nhl" class="panel"><div class="two-col"><div class="sidebar" id="nhl-sb"></div><div class="main" id="nhl-main"><div class="empty"><div class="e-icon">🏒</div><div class="e-title">Select a game for your pick</div><div class="e-sub">9 NHL games with win probabilities and picks. Click any game.</div></div></div></div></div>
+
+<script>
+const MLB=[
+  {id:1,away:"Arizona Diamondbacks",awayA:"AZ",home:"Baltimore Orioles",homeA:"BAL",time:"12:35 PM ET",ml:"AZ +120 / BAL -140",spread:"AZ +1.5 (-180) / BAL -1.5 (+155)",total:"O 8.5 (-110) / U 8.5 (-110)",pick:"Baltimore -1.5",pass:false,text:"<p><strong>Quick Take:</strong> Baltimore has won both games of this series and AZ's bullpen is completely gassed after giving up 9 and 7 runs back-to-back.</p><p><strong>Key Factors</strong><br>• BAL has dominated this series — offense locked in at Camden Yards<br>• AZ bullpen allowed 16 runs in two games — backend arms from the jump<br>• Arizona is 2-10 on the road — one of worst road records in NL<br>• Baltimore 6-2 at home, playing confident aggressive baseball</p><p><strong>Value Assessment:</strong> BAL -1.5 at +155 is where the value lives. Depleted pen + poor road record = run line cover.</p><p><strong>My Pick:</strong> Baltimore -1.5 (+155). Series sweep, lay the run line.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:2,away:"Cleveland Guardians",awayA:"CLE",home:"St. Louis Cardinals",homeA:"STL",time:"1:15 PM ET",ml:"CLE -140 / STL +120",spread:"CLE -1.5 (+160) / STL +1.5 (-185)",total:"O 8.0 (-110) / U 8.0 (-110)",pick:"Cleveland ML",pass:false,text:"<p><strong>Quick Take:</strong> Cleveland has swept both games 9-3. The Guardians are the hottest team in the AL right now.</p><p><strong>Key Factors</strong><br>• CLE has won 8 of last 10 — top-3 ERA in baseball this month<br>• STL lost both games badly — bullpen drained, offense has no answers<br>• Cleveland lineup is deep, balanced — no easy outs<br>• Sweep spot — momentum heavily favors CLE</p><p><strong>My Pick:</strong> Cleveland ML (-140). Close out the sweep.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:3,away:"Boston Red Sox",awayA:"BOS",home:"Minnesota Twins",homeA:"MIN",time:"1:40 PM ET",ml:"BOS +185 / MIN -225",spread:"BOS +1.5 (-280) / MIN -1.5 (+230)",total:"O 9.0 (-110) / U 9.0 (-110)",pick:"Under 9.0",pass:false,text:"<p><strong>Quick Take:</strong> MIN just beat BOS 13-6. Classic regression spot — fade the blowout.</p><p><strong>Key Factors</strong><br>• Teams scoring 13+ run below-average next game — regression is real<br>• BOS starter fresh and motivated to bounce back<br>• MIN bullpen overworked yesterday — thin in a day game<br>• Target Field in April is cold — suppresses offense</p><p><strong>My Pick:</strong> Under 9.0 (-110). Regression after a 19-run game.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:4,away:"Washington Nationals",awayA:"WSH",home:"Pittsburgh Pirates",homeA:"PIT",time:"6:40 PM ET",ml:"WSH +200 / PIT -245",spread:"WSH +1.5 (-310) / PIT -1.5 (+255)",total:"O 8.5 (-110) / U 8.5 (-110)",pick:"PASS",pass:true,text:"<p><strong>Quick Take:</strong> PIT won 16-5 twice. -245 ML is a trap at peak public action.</p><p><strong>Key Factors</strong><br>• Teams after back-to-back blowouts often come out flat<br>• WSH arms fresher — pulled early the last two days<br>• -245 means risking $245 to win $100 — terrible ROI<br>• Bad teams still win 35-40% of the time in baseball</p><p><strong>My Pick:</strong> PASS. Never chase blowouts at inflated prices.</p><p><strong>Confidence:</strong> N/A &nbsp;·&nbsp; <strong>Bankroll: 0%</strong></p>"},
+  {id:5,away:"San Francisco Giants",awayA:"SF",home:"Cincinnati Reds",homeA:"CIN",time:"6:40 PM ET",ml:"SF +150 / CIN -175",spread:"SF +1.5 (-215) / CIN -1.5 (+180)",total:"O 8.5 (-110) / U 8.5 (-110)",pick:"San Francisco ML",pass:false,text:"<p><strong>Quick Take:</strong> CIN -175 is overpriced. Giants are a legitimate team being undervalued at +150.</p><p><strong>Key Factors</strong><br>• SF has a quality starter — reliable road arm this season<br>• CIN offense streaky — can't sustain against quality pitching<br>• Giants 5-3 in last 8 road games — playing above expectations<br>• Great American Ball Park homer-friendly but SF pitching travels</p><p><strong>My Pick:</strong> San Francisco ML (+150). Quality team at plus money.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:6,away:"Kansas City Royals",awayA:"KC",home:"Detroit Tigers",homeA:"DET",time:"6:40 PM ET",ml:"KC +125 / DET -148",spread:"KC +1.5 (-175) / DET -1.5 (+148)",total:"O 7.5 (-110) / U 7.5 (-110)",pick:"Under 7.5",pass:false,text:"<p><strong>Quick Take:</strong> Comerica Park is the most pitcher-friendly park in the AL. Two cold offenses.</p><p><strong>Key Factors</strong><br>• DET under in 6 of last 9 home games — park and pitching suppress scoring<br>• KC bottom-5 in runs scored last 2 weeks — ice cold offense<br>• Both teams using better starters in series finale<br>• April Detroit weather — ball doesn't carry</p><p><strong>My Pick:</strong> Under 7.5 (-110). Pitcher-friendly park, cold offenses.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:7,away:"Chicago Cubs",awayA:"CHC",home:"Philadelphia Phillies",homeA:"PHI",time:"6:40 PM ET",ml:"CHC +145 / PHI -170",spread:"CHC +1.5 (-205) / PHI -1.5 (+172)",total:"O 8.5 (-110) / U 8.5 (-110)",pick:"Philadelphia ML",pass:false,text:"<p><strong>Quick Take:</strong> PHI obliterated CHC twice, 13-7 both games. Phillies are the hottest offense in the NL.</p><p><strong>Key Factors</strong><br>• PHI scored 26 runs in 2 games — lineup in a historic groove<br>• CHC bullpen torched for 26 combined runs — no arms left<br>• Harper, Schwarber, Turner all hitting .320+ this week<br>• Citizens Bank Park top-3 in MLB for home run frequency</p><p><strong>My Pick:</strong> Philadelphia ML (-170). Back the red-hot team.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:8,away:"Los Angeles Angels",awayA:"LAA",home:"New York Yankees",homeA:"NYY",time:"7:05 PM ET",ml:"LAA +215 / NYY -265",spread:"LAA +1.5 (-340) / NYY -1.5 (+275)",total:"O 9.5 (-110) / U 9.5 (-110)",pick:"Over 9.5",pass:false,text:"<p><strong>Quick Take:</strong> Yankees beat Angels 11-10 Monday. Both bullpens depleted. Back in Yankee Stadium.</p><p><strong>Key Factors</strong><br>• Both pens allowed 10+ runs recently — thin and tired tonight<br>• Yankee Stadium is one of the best hitter's parks in baseball<br>• Combined 21 runs last meeting — offenses are rolling<br>• Tired pens in Yankee Stadium cash overs at elite rate</p><p><strong>My Pick:</strong> Over 9.5 (-110). Tired bullpens + Yankee Stadium = over.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:9,away:"Miami Marlins",awayA:"MIA",home:"Atlanta Braves",homeA:"ATL",time:"7:15 PM ET",ml:"MIA +160 / ATL -190",spread:"MIA +1.5 (-240) / ATL -1.5 (+198)",total:"O 8.5 (-110) / U 8.5 (-110)",pick:"Miami ML",pass:false,text:"<p><strong>Quick Take:</strong> Miami has won BOTH games of this series — outscoring ATL 20-8. Marlins at +160 is a gift.</p><p><strong>Key Factors</strong><br>• MIA completely dominated — pitching matchup clearly works<br>• ATL offense totally lost against Miami's arms all series<br>• Marlins 5-2 in last 7 road games — quietly rolling<br>• ATL -190 after 2 embarrassments is a classic public trap</p><p><strong>My Pick:</strong> Miami ML (+160). Series sweep value — best MLB play of the day.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:10,away:"Toronto Blue Jays",awayA:"TOR",home:"Milwaukee Brewers",homeA:"MIL",time:"7:40 PM ET",ml:"TOR +135 / MIL -158",spread:"TOR +1.5 (-185) / MIL -1.5 (+155)",total:"O 8.0 (-110) / U 8.0 (-110)",pick:"Toronto ML",pass:false,text:"<p><strong>Quick Take:</strong> MIL -158 is pricey against a solid Toronto road team.</p><p><strong>Key Factors</strong><br>• TOR has a quality starter — reliable arm this season<br>• MIL offense inconsistent against quality pitching<br>• American Family Field neutral in April — no park edge<br>• TOR 5-3 in last 8 road games</p><p><strong>My Pick:</strong> Toronto ML (+135). Underdog value on a competitive team.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:11,away:"Tampa Bay Rays",awayA:"TB",home:"Chicago White Sox",homeA:"CWS",time:"7:40 PM ET",ml:"TB -125 / CWS +105",spread:"TB -1.5 (+148) / CWS +1.5 (-170)",total:"O 7.5 (-110) / U 7.5 (-110)",pick:"Tampa Bay ML",pass:false,text:"<p><strong>Quick Take:</strong> Tampa Bay vs one of the worst teams in baseball. Clean spot.</p><p><strong>Key Factors</strong><br>• CWS bottom-3 in virtually every offensive category<br>• TB pitching top-5 in ERA — disciplined and controlled<br>• Guaranteed Rate Field — dead stadium, zero home advantage<br>• TB 7-2 vs teams under .400 this season</p><p><strong>My Pick:</strong> Tampa Bay ML (-125). Better team at a fair price.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:12,away:"Colorado Rockies",awayA:"COL",home:"Houston Astros",homeA:"HOU",time:"8:10 PM ET",ml:"COL +240 / HOU -300",spread:"COL +1.5 (-380) / HOU -1.5 (+305)",total:"O 9.0 (-110) / U 9.0 (-110)",pick:"PASS",pass:true,text:"<p><strong>Quick Take:</strong> HOU -300 ML is a money burner. Never lay -300 in baseball.</p><p><strong>Key Factors</strong><br>• COL terrible but -300 requires 75%+ win rate just to break even<br>• Good teams lose to bad teams 35-40% of the time in MLB<br>• Zero value on either side of this line</p><p><strong>My Pick:</strong> PASS. Hard skip.</p><p><strong>Confidence:</strong> N/A &nbsp;·&nbsp; <strong>Bankroll: 0%</strong></p>"},
+  {id:13,away:"Texas Rangers",awayA:"TEX",home:"Athletics",homeA:"ATH",time:"9:40 PM ET",ml:"TEX -135 / ATH +115",spread:"TEX -1.5 (+170) / ATH +1.5 (-200)",total:"O 8.0 (-110) / U 8.0 (-110)",pick:"Texas ML",pass:false,text:"<p><strong>Quick Take:</strong> Texas beat Oakland 8-1 last night — 3rd straight win in this series. Rangers are rolling.</p><p><strong>Key Factors</strong><br>• TEX dominated every game this series — pitching and offense both clicking<br>• Oakland lacks impact bats — pitching has been inconsistent<br>• Rangers one of the hotter teams in AL West right now<br>• -135 ML for a series sweep closer is solid value</p><p><strong>My Pick:</strong> Texas ML (-135). Close out the sweep.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:14,away:"Seattle Mariners",awayA:"SEA",home:"San Diego Padres",homeA:"SD",time:"9:40 PM ET",ml:"SEA -110 / SD -110",spread:"SEA +1.5 (-195) / SD -1.5 (+162)",total:"O 7.5 (-110) / U 7.5 (-110)",pick:"Under 7.5",pass:false,text:"<p><strong>Quick Take:</strong> Best pitching matchup of the slate at Petco Park — most extreme pitcher's park in the NL.</p><p><strong>Key Factors</strong><br>• Petco Park: massive dimensions, marine layer, cool air — fewest runs/game in NL<br>• SEA and SD both top-6 in team ERA over last 30 days<br>• Both offenses below league average in runs scored this week<br>• Sharp money hammering under all day</p><p><strong>My Pick:</strong> Under 7.5 (-110). Elite pitching duel in Petco. Best bet of the day.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐⭐ 5/5 &nbsp;·&nbsp; <strong>Bankroll: 4%</strong></p>"},
+  {id:15,away:"New York Mets",awayA:"NYM",home:"Los Angeles Dodgers",homeA:"LAD",time:"10:10 PM ET",ml:"NYM +165 / LAD -200",spread:"NYM +1.5 (-255) / LAD -1.5 (+210)",total:"O 8.0 (-110) / U 8.0 (-110)",pick:"Mets ML",pass:false,text:"<p><strong>Quick Take:</strong> LAD beat NYM 4-0 last night. Mets are a legit contender at +165 — exceptional value.</p><p><strong>Key Factors</strong><br>• NYM ace on the mound tonight — fresh and motivated after shutout loss<br>• LAD scored 4 but starter carried them — bats didn't explode<br>• Mets lineup hasn't shown up yet this series — regression coming<br>• Market consistently overvalues LAD — fade the logo</p><p><strong>My Pick:</strong> Mets ML (+165). Ace on mound, plus money on a good team.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+];
+
+const NHL=[
+  {id:101,away:"Washington Capitals",awayA:"WSH",home:"Columbus Blue Jackets",homeA:"CBJ",time:"7:00 PM ET",prob:"WSH 49% / CBJ 51%",ml:"WSH -105 / CBJ -115",ou:"O 6.0 (-110) / U 6.0 (-110)",pick:"Washington ML",text:"<p><strong>Quick Take:</strong> Washington beat Pittsburgh 3-0 Monday and are playing confident hockey. CBJ is a very weak home team.</p><p><strong>Key Factors</strong><br>• WSH is 6-3 in their last 9 — playing with purpose for positioning<br>• Columbus has been one of the worst home teams in the NHL this season<br>• Capitals have Ovechkin healthy and motivated<br>• WSH -105 at nearly even money against a weak home squad is great value</p><p><strong>My Pick:</strong> Washington ML (-105). Excellent value on a hot team.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:102,away:"New Jersey Devils",awayA:"NJ",home:"Boston Bruins",homeA:"BOS",time:"7:00 PM ET",prob:"NJ 45% / BOS 55%",ml:"NJ +120 / BOS -140",ou:"O 5.5 (-115) / U 5.5 (-105)",pick:"Boston ML",text:"<p><strong>Quick Take:</strong> Boston beat Columbus 3-2 Sunday and are one of the league's best home teams. TD Garden is a fortress.</p><p><strong>Key Factors</strong><br>• BOS at home one of the most consistent winning environments in the NHL<br>• Bruins have 54.7% win probability — model backs them significantly<br>• NJ has been inconsistent on the road over the last 3 weeks<br>• Boston's defensive system is elite and limits scoring chances</p><p><strong>My Pick:</strong> Boston ML (-140). Back the Bruins at home.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:103,away:"Montreal Canadiens",awayA:"MTL",home:"Philadelphia Flyers",homeA:"PHI",time:"7:00 PM ET",prob:"MTL 59% / PHI 41%",ml:"MTL -130 / PHI +110",ou:"O 5.5 (-110) / U 5.5 (-110)",pick:"Montreal ML",text:"<p><strong>Quick Take:</strong> Best value play of the NHL slate. MTL has 59.3% win probability and is priced as a road favorite — they're simply the better team.</p><p><strong>Key Factors</strong><br>• MTL beat NYI 4-1 Sunday — offense clicking, goaltending sharp<br>• Philadelphia Flyers inconsistent all season — home ice means little for them<br>• Canadiens 7-3 in their last 10 overall — one of the hottest teams in the league<br>• Model strongly backs MTL (59.3%) — largest edge on the NHL slate</p><p><strong>Value Assessment:</strong> MTL -130 with 59.3% win probability is outstanding positive expected value.</p><p><strong>My Pick:</strong> Montreal ML (-130). Best NHL bet of the day — model edge is massive.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐⭐ 5/5 &nbsp;·&nbsp; <strong>Bankroll: 4%</strong></p>"},
+  {id:104,away:"Carolina Hurricanes",awayA:"CAR",home:"New York Islanders",homeA:"NYI",time:"7:00 PM ET",prob:"CAR 48% / NYI 52%",ml:"CAR -110 / NYI -110",ou:"O 5.5 (-110) / U 5.5 (-110)",pick:"Under 5.5",text:"<p><strong>Quick Take:</strong> Carolina and NY Islanders is a defensive clash. Both teams play a structure-first system.</p><p><strong>Key Factors</strong><br>• CAR is one of the best defensive teams in the NHL — suffocates opponents<br>• NYI under in 6 of last 10 games — offense has been slow lately<br>• UBS Arena has been an under-friendly environment this season<br>• Nearly even matchup — take the defensive angle</p><p><strong>My Pick:</strong> Under 5.5 (-110). Defensive chess match — take the under.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:105,away:"Anaheim Ducks",awayA:"ANA",home:"Minnesota Wild",homeA:"MIN",time:"8:00 PM ET",prob:"ANA 54% / MIN 46%",ml:"ANA -120 / MIN +100",ou:"O 5.5 (-110) / U 5.5 (-110)",pick:"Anaheim ML",text:"<p><strong>Quick Take:</strong> The model gives Anaheim 53.5% win probability and they're priced at -120 — line undervalues them.</p><p><strong>Key Factors</strong><br>• ANA playing much better hockey over the last month — young core clicking<br>• Minnesota inconsistent at home — form has been up and down<br>• Ducks have won 5 of last 8 — trending upward<br>• Model edge: ANA 53.5% probability at -120 is +EV long term</p><p><strong>My Pick:</strong> Anaheim ML (-120). Model edge play — take the Ducks.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:106,away:"Winnipeg Jets",awayA:"WPG",home:"Utah Mammoth",homeA:"UTA",time:"9:00 PM ET",prob:"WPG 39% / UTA 61%",ml:"WPG +165 / UTA -200",ou:"O 5.5 (-110) / U 5.5 (-110)",pick:"Utah ML",text:"<p><strong>Quick Take:</strong> Utah Mammoth have a dominant 61.1% win probability. Winnipeg just got crushed 6-2 by Vegas Monday night.</p><p><strong>Key Factors</strong><br>• WPG lost 6-2 to VGK — completely outplayed in every zone<br>• UTA at home is tough — they're 8-3 at home in their last 11<br>• Jets fading at end of season — energy and effort has been lacking<br>• Model gives Utah massive 61.1% edge — strongest home favorite of the night</p><p><strong>My Pick:</strong> Utah ML (-200). Strong model edge, weak opponent after blowout loss.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:107,away:"Colorado Avalanche",awayA:"COL",home:"Calgary Flames",homeA:"CGY",time:"9:00 PM ET",prob:"COL 59% / CGY 41%",ml:"COL -145 / CGY +122",ou:"O 6.0 (-110) / U 6.0 (-110)",pick:"Colorado ML",text:"<p><strong>Quick Take:</strong> Colorado beat Edmonton 2-1 last night and has a 58.8% win probability in Calgary. Avalanche are one of the best teams in the West.</p><p><strong>Key Factors</strong><br>• COL just beat a quality EDM team on the road — playing their best hockey<br>• Nathan MacKinnon has been dominant — carrying this team offensively<br>• CGY has a 41.2% win probability — Flames underperformed at home recently<br>• Colorado's road record excellent over the last 6 weeks</p><p><strong>My Pick:</strong> Colorado ML (-145). Back the Avalanche on their run.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+  {id:108,away:"Pittsburgh Penguins",awayA:"PIT",home:"St. Louis Blues",homeA:"STL",time:"9:30 PM ET",prob:"PIT 46% / STL 55%",ml:"PIT +130 / STL -155",ou:"O 6.0 (-110) / U 6.0 (-110)",pick:"St. Louis ML",text:"<p><strong>Quick Take:</strong> St. Louis just beat Minnesota 6-3 Monday — offense is rolling at Enterprise Center. Pittsburgh fading to close the season.</p><p><strong>Key Factors</strong><br>• STL scored 6 goals Monday — offense in a groove in front of home crowd<br>• PIT has been one of the worst road teams in the NHL over the last month<br>• Blues have 54.5% win probability — model backs them comfortably<br>• Pittsburgh goaltending shaky in road games recently</p><p><strong>My Pick:</strong> St. Louis ML (-155). Back the hot Blues at home.</p><p><strong>Confidence:</strong> ⭐⭐⭐ 3/5 &nbsp;·&nbsp; <strong>Bankroll: 2%</strong></p>"},
+  {id:109,away:"Los Angeles Kings",awayA:"LA",home:"Vancouver Canucks",homeA:"VAN",time:"10:00 PM ET",prob:"LA 58% / VAN 42%",ml:"LA -135 / VAN +112",ou:"O 6.0 (-110) / U 6.0 (-110)",pick:"LA Kings ML",text:"<p><strong>Quick Take:</strong> LA Kings just beat Seattle 5-3 Monday and have a massive 58.4% win probability in Vancouver. Kings are one of the best road teams in the West.</p><p><strong>Key Factors</strong><br>• LA beat SEA 5-3 on the road Monday — offense and goaltending both clicking<br>• Kings have 58.4% win probability on the road — elite road form<br>• Vancouver has been inconsistent at home — below expectations this season<br>• LA's defensive structure travels extremely well</p><p><strong>Value Assessment:</strong> LA -135 ML with 58.4% win probability is strong positive expected value.</p><p><strong>My Pick:</strong> LA Kings ML (-135). Strong model edge, elite road team.</p><p><strong>Confidence:</strong> ⭐⭐⭐⭐ 4/5 &nbsp;·&nbsp; <strong>Bankroll: 3%</strong></p>"},
+];
+
+const BB=[
+  {sport:"MLB",gameId:14,game:"SEA @ SD",time:"9:40 PM ET",pick:"Under 7.5",odds:"-110",stars:"⭐⭐⭐⭐⭐",pct:"4%",reason:"Elite pitching duel at Petco Park — the best pitcher's park in baseball. Highest confidence play of the day."},
+  {sport:"NHL",gameId:103,game:"MTL @ PHI",time:"7:00 PM ET",pick:"Montreal ML",odds:"-130",stars:"⭐⭐⭐⭐⭐",pct:"4%",reason:"Model gives MTL 59.3% win probability at -130 — massive positive expected value. Best NHL bet of the slate."},
+  {sport:"NHL",gameId:109,game:"LA @ VAN",time:"10:00 PM ET",pick:"LA Kings ML",odds:"-135",stars:"⭐⭐⭐⭐",pct:"3%",reason:"Kings have 58.4% win prob on the road after beating SEA 5-3 Monday. Elite road team, strong model edge."},
+  {sport:"MLB",gameId:9,game:"MIA @ ATL",time:"7:15 PM ET",pick:"Miami ML",odds:"+160",stars:"⭐⭐⭐⭐",pct:"3%",reason:"Marlins swept this series — outscored ATL 20-8. Plus money on the series-dominant team."},
+  {sport:"NHL",gameId:107,game:"COL @ CGY",time:"9:00 PM ET",pick:"Colorado ML",odds:"-145",stars:"⭐⭐⭐⭐",pct:"3%",reason:"COL has 58.8% win prob coming off a win at EDM. MacKinnon and the Avalanche are rolling."},
+  {sport:"MLB",gameId:13,game:"TEX @ ATH",time:"9:40 PM ET",pick:"Texas ML",odds:"-135",stars:"⭐⭐⭐⭐",pct:"3%",reason:"Rangers dominant all series, closing out the sweep at a fair price."},
+];
+
+const F5=[
+  {gameId:14,game:"SEA @ SD",pick:"Under 4.0 F5",odds:"-115",stars:"⭐⭐⭐⭐⭐",reason:"Two elite starters in Petco Park — scoring in the first 5 should be minimal. Best F5 under on the slate."},
+  {gameId:2,game:"CLE @ STL",pick:"CLE F5 ML",odds:"-130",stars:"⭐⭐⭐⭐",reason:"CLE starter dominant — STL offense shut down all series. Guardians should lead after 5."},
+  {gameId:13,game:"TEX @ ATH",pick:"TEX F5 ML",odds:"-125",stars:"⭐⭐⭐⭐",reason:"Rangers starter lights out this series. Oakland struggles to generate early offense."},
+  {gameId:7,game:"CHC @ PHI",pick:"Under 4.5 F5",odds:"-110",stars:"⭐⭐⭐",reason:"Both teams sending quality starters — bullpen chaos hits late. F5 stays under."},
+  {gameId:1,game:"AZ @ BAL",pick:"BAL F5 ML",odds:"-145",stars:"⭐⭐⭐",reason:"BAL starter strong at home, AZ sending tired arm. Orioles lead through 5."},
+];
+
+const FINR=[
+  {gameId:14,game:"SEA @ SD",pick:"No Run 1st Inn",odds:"-160",stars:"⭐⭐⭐⭐⭐",reason:"Petco Park + two best starters in baseball. First inning scoreless is nearly automatic."},
+  {gameId:6,game:"KC @ DET",pick:"No Run 1st Inn",odds:"-155",stars:"⭐⭐⭐⭐",reason:"Comerica Park suppresses early scoring. Both quality arms attack the zone — outs happen fast."},
+  {gameId:2,game:"CLE @ STL",pick:"No Run 1st Inn",odds:"-152",stars:"⭐⭐⭐⭐",reason:"CLE starter dominant, STL starter a groundball pitcher. Neither team scoring in 1st more than 30% this week."},
+  {gameId:11,game:"TB @ CWS",pick:"No Run 1st Inn",odds:"-150",stars:"⭐⭐⭐⭐",reason:"TB starter elite at keeping leadoff hitters off base. CWS terrible — won't score in 1st against good pitching."},
+  {gameId:13,game:"TEX @ ATH",pick:"No Run 1st Inn",odds:"-148",stars:"⭐⭐⭐",reason:"Texas starter retired side in order in 1st inning in 4 of last 5 starts. ATH weak at top of lineup."},
+];
+
+let selMlb=null,selNhl=null;
+function oc(o){return o&&o.trim().startsWith('+')?'odds-pos':'odds-neg'}
+
+function renderBB(){
+  document.getElementById('bb-list').innerHTML=BB.map(b=>`
+    <div class="pick-card" onclick="goGame('${b.sport}',${b.gameId})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="display:flex;align-items:center;margin-bottom:3px">
+            <span class="sport-tag tag-${b.sport.toLowerCase()}">${b.sport}</span>
+            <span class="pick-game-info">${b.game} · ${b.time}</span>
+          </div>
+          <div class="pick-name">${b.pick}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pick-odds ${oc(b.odds)}">${b.odds}</div>
+          <div class="pick-stars">${b.stars}</div>
+          <div class="pick-bank">${b.pct} bankroll</div>
+        </div>
+      </div>
+      <div class="pick-reason">${b.reason}</div>
+      <div class="pick-tap">→ tap for full analysis</div>
+    </div>`).join('');
+}
+
+function renderSimple(data,elId){
+  document.getElementById(elId).innerHTML=data.map(b=>`
+    <div class="pick-card" onclick="goGame('MLB',${b.gameId})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div class="pick-game-info">${b.game}</div>
+          <div class="pick-name">${b.pick}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pick-odds ${oc(b.odds)}">${b.odds}</div>
+          <div class="pick-stars">${b.stars}</div>
+        </div>
+      </div>
+      <div class="pick-reason">${b.reason}</div>
+      <div class="pick-tap">→ tap for full analysis</div>
+    </div>`).join('');
+}
+
+function renderMlbSb(){
+  document.getElementById('mlb-sb').innerHTML='<div class="sidebar-label">⚾ MLB — Tue Apr 14</div>'+
+    MLB.map(g=>`<div class="game-card ${selMlb===g.id?'sel-mlb':''}" onclick="selMlbGame(${g.id})">
+      <div class="game-time">${g.time}</div>
+      <div class="game-teams">${g.awayA} @ ${g.homeA}</div>
+      <div class="game-away">${g.away}</div>
+      <span class="badge ${g.pass?'badge-pass':'badge-mlb'}">${g.pass?'⚠ PASS':'✓ '+g.pick}</span>
+    </div>`).join('');
+}
+
+function renderNhlSb(){
+  document.getElementById('nhl-sb').innerHTML='<div class="sidebar-label">🏒 NHL — Tue Apr 14</div>'+
+    NHL.map(g=>`<div class="game-card ${selNhl===g.id?'sel-nhl':''}" onclick="selNhlGame(${g.id})">
+      <div class="game-time">${g.time}</div>
+      <div class="game-teams">${g.awayA} @ ${g.homeA}</div>
+      <div class="game-away">${g.away}</div>
+      <div class="game-prob">${g.prob}</div>
+      <span class="badge badge-nhl">✓ ${g.pick}</span>
+    </div>`).join('');
+}
+
+function selMlbGame(id){
+  selMlb=id; renderMlbSb();
+  const g=MLB.find(x=>x.id===id);
+  document.getElementById('mlb-main').innerHTML=`
+    <div class="a-label">MLB · ${g.time}</div>
+    <div class="a-title">${g.away}<span class="a-vs">@</span>${g.home}</div>
+    <div style="height:12px"></div>
+    <div class="odds-grid g3">
+      ${[['Moneyline',g.ml],['Spread',g.spread],['Total',g.total]].map(([l,v])=>`
+        <div class="odds-box"><div class="odds-label">${l}</div><div class="odds-val">${v.split(' / ').join('<br>')}</div></div>`).join('')}
+    </div>
+    <div class="pick-row">
+      <div class="pick-row-label">Pick:</div>
+      <div class="${g.pass?'pill-pass':'pill-good'}">${g.pass?'⚠ PASS — No Value':'✓ '+g.pick}</div>
+    </div>
+    <div class="a-box">
+      <div class="a-title-bar"><span class="a-dot dot-g"></span>Sharp Analysis</div>
+      <div class="a-text">${g.text}</div>
+    </div>
+    <div class="disc">For entertainment only · Bet responsibly · Not financial advice</div>`;
+}
+
+function selNhlGame(id){
+  selNhl=id; renderNhlSb();
+  const g=NHL.find(x=>x.id===id);
+  document.getElementById('nhl-main').innerHTML=`
+    <div class="a-label">NHL · ${g.time}</div>
+    <div class="a-title">${g.away}<span class="a-vs">@</span>${g.home}</div>
+    <div class="a-prob">Win Probability: ${g.prob}</div>
+    <div class="odds-grid g2">
+      ${[['Moneyline',g.ml],['Over/Under',g.ou]].map(([l,v])=>`
+        <div class="odds-box"><div class="odds-label">${l}</div><div class="odds-val">${v.split(' / ').join('<br>')}</div></div>`).join('')}
+    </div>
+    <div class="pick-row">
+      <div class="pick-row-label">Pick:</div>
+      <div class="pill-nhl">✓ ${g.pick}</div>
+    </div>
+    <div class="a-box">
+      <div class="a-title-bar"><span class="a-dot dot-b"></span>Sharp Analysis</div>
+      <div class="a-text">${g.text}</div>
+    </div>
+    <div class="disc">For entertainment only · Bet responsibly · Not financial advice</div>`;
+}
+
+function goGame(sport,id){
+  if(sport==='MLB'){showTab('mlb');selMlbGame(id);}
+  else{showTab('nhl');selNhlGame(id);}
+}
+
+function showTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  const map={best:0,f5:1,finr:2,mlb:3,nhl:4};
+  document.querySelectorAll('.tab')[map[name]].classList.add('active');
+}
+
+renderBB();
+renderSimple(F5,'f5-list');
+renderSimple(FINR,'finr-list');
+renderMlbSb();
+renderNhlSb();
+</script>
+</body>
+</html>
